@@ -227,7 +227,7 @@ get_multisample_phasing <- function(chrom, bbphasingprefixes, maxlag = 100, rela
     
     # check whether all are phased, note that the filter takes into account past values only here! So needs to be shifted in next step
     evidencelist[[lag]] <- apply(MARGIN = 2, X = S4Vectors::mcols(loci)[,grep(pattern = "Major", x = colnames(S4Vectors::mcols(loci)))],
-                                 FUN = function(x, lag) dplyr::filter(x = grepl(pattern = "|", x = x, fixed = T), filter = rep(1, lag + 1), sides = 1) == lag+1, lag = lag)
+                                 FUN = function(x, lag) filter(x = grepl(pattern = "|", x = x, fixed = T), filter = rep(1, lag + 1), sides = 1) == lag+1, lag = lag)
     # and they have the same PS
     # evidencelist[[lag]] <- (evidencelist[[lag]][-1,] * rbind(matrix(NA, nrow = lag-1, ncol = length(vcfs_common)), apply(MARGIN = 2, X = mcols(loci)[,grep(pattern = "PS", x = colnames(mcols(loci)))],
     #                                                 FUN = function(x, lag) diff(x = x, lag = lag) == 0, lag = lag))) == 1
