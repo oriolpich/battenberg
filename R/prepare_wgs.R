@@ -28,6 +28,19 @@ getAlleleCounts = function(bam.file, output.file, g1000.loci, min.base.qual=20, 
 }
 
 
+standardiseChrNotation = function(tumourname,normalname) {
+	if (!is.null(tumourname)){
+tAF=capture.output(cat('bash -c \'sed -i \'s/chr//g\' ', tumourname,'_alleleFrequencies_chr*.txt\'',sep = ""))
+system(tAF)
+		}
+	if (!is.null(normalname)){
+nAF=capture.output(cat('bash -c \'sed -i \'s/chr//g\' ', normalname,'_alleleFrequencies_chr*.txt\'',sep = ""))
+system(nAF)
+		}
+}
+
+
+
 #' Obtain BAF and LogR from the allele counts
 #'
 #' @param tumourAlleleCountsFile.prefix Prefix of the allele counts files for the tumour.
@@ -421,6 +434,10 @@ prepare_wgs = function(chrom_names, tumourbam, normalbam, tumourname, normalname
       }
     }
   }
+	
+  # Standardise chromosome notation in raw allele count files
+  standardiseChrNotation(tumourname=tumourname,
+			 normalname=normalname)
 
   # Obtain BAF and LogR from the raw allele counts
   getBAFsAndLogRs(tumourAlleleCountsFile.prefix=paste(tumourname,"_alleleFrequencies_chr", sep=""),
