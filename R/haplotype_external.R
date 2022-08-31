@@ -188,8 +188,9 @@ write_battenberg_phasing <- function(tumourname, SNPfiles, imputedHaplotypeFiles
 #' @param outprefix Prefix of the ouput multisample phasing files
 #' @author jdemeul
 #' @export
-get_multisample_phasing <- function(chrom, bbphasingprefixes, maxlag = 100, relative_weight_balanced = .25, outprefix) {
+get_multisample_phasing2 <- function(chrom, bbphasingprefixes, maxlag = 100, relative_weight_balanced = .25, outprefix) {
 
+  print('HELLOOO')
   vcfs <- lapply(X = paste0(bbphasingprefixes, chrom, ".vcf"), FUN = VariantAnnotation::readVcf)
   samplenames <- sapply(X = vcfs, FUN = function(x) VariantAnnotation::samples(VariantAnnotation::header(x)))
   
@@ -197,9 +198,6 @@ get_multisample_phasing <- function(chrom, bbphasingprefixes, maxlag = 100, rela
   temp <- do.call(c, lapply(X = vcfs, FUN = SummarizedExperiment::rowRanges))
   commonloci <- unique(names(which(GenomicRanges::countOverlaps(query = temp, type = "equal", drop.self = F, drop.redundant = F) == length(vcfs))))
   vcfs_common <- lapply(X = vcfs, FUN = function(x, commonloci) GenomicRanges::sort(x[commonloci]), commonloci = commonloci)
-  
-  # clean up
-  rm(vcfs, temp, commonloci)
   
   # go through each vcf and add relevant columns as appropriate
   loci <- SummarizedExperiment::rowRanges(vcfs_common[[1]])

@@ -510,7 +510,7 @@ segment.baf.phased.multisample = function(samplename, inputfile, outputfile, pri
   # @param gamma
   # @param no_segmentation Do not perform segmentation. This step will switch the haplotype blocks, but then just takes the mean BAFphased as BAFsegm
   # @return A data.frame with columns Chromosome,Position,BAF,BAFphased,BAFseg
-  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, gamma) {
+  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, gamma, GENOMEBUILD) {
     
     row.indices = which(BAFrawchr$Position >= presegment_chrom_start & 
                           BAFrawchr$Position <= presegment_chrom_end)
@@ -538,6 +538,7 @@ segment.baf.phased.multisample = function(samplename, inputfile, outputfile, pri
       BAFsegm = res$estimates[,-c(1:2)]
     }
     
+    print('LSOSLSLS')
     BAFphased <- do.call(cbind, sapply(X = 1:ncol(BAFsegm), FUN = function(x, bafsegm, baf) ifelse(bafsegm[,x] > 0.5, baf[,x], 1-baf[,x]), bafsegm = BAFsegm, baf = BAFrawchrseg[,-c(1:2)], simplify = F))
     
     if (nrow(BAFphased) < 50){

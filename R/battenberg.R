@@ -74,7 +74,7 @@ battenberg = function(analysis="paired", tumourname, normalname, tumour_data_fil
                       beaglewindow=40,
                       beagleoverlap=4,
                       javajre="java",
-                      write_battenberg_phasing = T, multisample_relative_weight_balanced = 0.25, multisample_maxlag = 100, segmentation_gamma_multisample = 5,
+                      write_battenberg_phasing_v = T, multisample_relative_weight_balanced = 0.25, multisample_maxlag = 100, segmentation_gamma_multisample = 5,
                       snp6_reference_info_file=NA, apt.probeset.genotype.exe="apt-probeset-genotype", apt.probeset.summarize.exe="apt-probeset-summarize",
                       norm.geno.clust.exe="normalize_affy_geno_cluster.pl", birdseed_report_file="birdseed.report.txt", heterozygousFilter="none",
                       prior_breakpoints_file=NULL, GENOMEBUILD="hg19", chrom_coord_file=NULL) {
@@ -157,6 +157,7 @@ battenberg = function(analysis="paired", tumourname, normalname, tumour_data_fil
     allelecounts_file = NULL
   }
   print(chrom_names) 
+  print(nsamples)
   for (sampleidx in 1:nsamples) {
     
     if (!skip_preprocessing[sampleidx]) {
@@ -321,7 +322,12 @@ prepare_wgs_germline(chrom_names=chrom_names,
                         outputfile=paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep=""),
                         chr_names=chrom_names)
     }
+
+    print('HERE22')
+    print(tumourname[sampleidx])
     
+    print('SEGMENTING BAF HERE')
+
     # Segment the phased and haplotyped BAF data
     segment.baf.phased(samplename=tumourname[sampleidx],
                        inputfile=paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep=""), 
@@ -333,7 +339,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
                        phasekmin=phasing_kmin,
                        calc_seg_baf_option=calc_seg_baf_option)
     
-    if (nsamples > 1 | write_battenberg_phasing) {
+    if (nsamples > 1 ) {
       # Write the Battenberg phasing information to disk as a vcf
       write_battenberg_phasing(tumourname = tumourname[sampleidx],
                                SNPfiles = paste0(tumourname[sampleidx], "_alleleFrequencies_chr", chrom_names, ".txt"),
@@ -346,24 +352,29 @@ prepare_wgs_germline(chrom_names=chrom_names,
     
   }
   
+
+  print(chrom_names)
   
+  print(nsamples)
   # if this is a multisample run, combine the battenberg phasing outputs, incorporate it and resegment
   if (nsamples > 1) {
     print("Constructing multisample phasing")
     multisamplehaplotypeprefix <- paste0(normalname, "_multisample_haplotypes_chr")
 
+    print(multisamplehaplotypeprefix)
     
     # Setup for parallel computing
     clp = parallel::makeCluster(nthreads)
     doParallel::registerDoParallel(clp)
     
+    print(chrom_names)
     # Reconstruct haplotypes
     # mclapply(1:length(chrom_names), function(chrom) {
     foreach::foreach (i=1:length(chrom_names)) %dopar% {
       chrom = chrom_names[i]
       print(chrom)
       
-      get_multisample_phasing(chrom = chrom,
+      get_multisample_phasing2(chrom = chrom,
                               bbphasingprefixes = paste0(tumourname, "_Battenberg_phased_chr"),
                               maxlag = multisample_maxlag,
                               relative_weight_balanced = multisample_relative_weight_balanced,
@@ -431,6 +442,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
       
     }
     
+    print('SEGMENTING HEREE')
     # Segment the phased and haplotyped BAF data
     segment.baf.phased.multisample(samplename=tumourname,
                                    inputfile=paste(tumourname, "_heterozygousMutBAFs_haplotyped.txt", sep=""), 
@@ -538,4 +550,5 @@ prepare_wgs_germline(chrom_names=chrom_names,
                           plotting = T)
   }
 }
+
 
