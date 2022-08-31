@@ -1,4 +1,3 @@
-
 #' Helper function to adjust the BAF segmented values. By default the segmentation
 #' takes the mean BAFphased for each segment, but that doesn't work very well with
 #' outliers (i.e. badly phased regions). This function is then called to adjust
@@ -268,7 +267,7 @@ segment.baf.phased = function(samplename, inputfile, outputfile, prior_breakpoin
   # @param gamma
   # @param no_segmentation Do not perform segmentation. This step will switch the haplotype blocks, but then just takes the mean BAFphased as BAFsegm
   # @return A data.frame with columns Chromosome,Position,BAF,BAFphased,BAFseg
-  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, phasekmin, phasegamma, kmin, gamma, no_segmentation=F) {
+  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, phasekmin, phasegamma, kmin, gamma, no_segmentation=F, GENOMEBUILD='hg38') {
     row.indices = which(BAFrawchr$Position >= presegment_chrom_start & 
                           BAFrawchr$Position <= presegment_chrom_end)
     
@@ -361,7 +360,7 @@ segment.baf.phased = function(samplename, inputfile, outputfile, prior_breakpoin
     BAFoutputchr = NULL
     
     for (r in 1:nrow(breakpoints_chrom)) {
-      BAFoutput_preseg = run_pcf(BAFrawchr, breakpoints_chrom$start[r], breakpoints_chrom$end[r], phasekmin, phasegamma, kmin, gamma, no_segmentation)
+      BAFoutput_preseg = run_pcf(BAFrawchr, breakpoints_chrom$start[r], breakpoints_chrom$end[r], phasekmin, phasegamma, kmin, gamma, no_segmentation, GENOMEBUILD = GENOMEBUILD)
       BAFoutputchr = rbind(BAFoutputchr, BAFoutput_preseg)
     }
     
@@ -416,7 +415,7 @@ segment.baf.phased = function(samplename, inputfile, outputfile, prior_breakpoin
 #' @param GENOMEBUILD Genome build upon which the 1000G SNP coordinates were obtained
 #' @author jdemeul, sd11
 #' @export
-segment.baf.phased.multisample = function(samplename, inputfile, outputfile, prior_breakpoints_file=NULL, gamma=10, calc_seg_baf_option=3,GENOMEBUILD) {
+segment.baf.phased.multisample = function(samplename, inputfile, outputfile, prior_breakpoints_file=NULL, gamma=10, calc_seg_baf_option=3, GENOMEBUILD='hg38') {
   ##### internal function definitions
   # Function that takes SNPs that belong to a single segment and looks for big holes between
   # each pair of SNPs. If there is a big hole it will add another breakpoint to the breakpoints data.frame
@@ -510,7 +509,7 @@ segment.baf.phased.multisample = function(samplename, inputfile, outputfile, pri
   # @param gamma
   # @param no_segmentation Do not perform segmentation. This step will switch the haplotype blocks, but then just takes the mean BAFphased as BAFsegm
   # @return A data.frame with columns Chromosome,Position,BAF,BAFphased,BAFseg
-  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, gamma, GENOMEBUILD) {
+  run_pcf = function(BAFrawchr, presegment_chrom_start, presegment_chrom_end, gamma, GENOMEBUILD='hg38') {
     
     row.indices = which(BAFrawchr$Position >= presegment_chrom_start & 
                           BAFrawchr$Position <= presegment_chrom_end)
@@ -611,7 +610,7 @@ segment.baf.phased.multisample = function(samplename, inputfile, outputfile, pri
     BAFoutputchr = list()
     
     for (r in 1:nrow(breakpoints_chrom)) {
-      BAFoutputchr[[r]] = run_pcf(BAFrawchr = BAFrawchr, presegment_chrom_start = breakpoints_chrom$start[r], presegment_chrom_end =  breakpoints_chrom$end[r], gamma = gamma) 
+      BAFoutputchr[[r]] = run_pcf(BAFrawchr = BAFrawchr, presegment_chrom_start = breakpoints_chrom$start[r], presegment_chrom_end =  breakpoints_chrom$end[r], gamma = gamma, GENOMEBUILD = GENOMEBUILD) 
       # BAFoutputchr = rbind(BAFoutputchr, BAFoutput_preseg)
     }
     
