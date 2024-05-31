@@ -11,7 +11,7 @@ library(dplyr)
 
 ################################################################################
 ##################################################################test file paths
-gripps_vcf <- "/Volumes/proj-tracerx-wgs/working/release/TRACERxWGS_20231218/LTX0019/GRIPPS/LTX0019_SU_T1-R3--4ef0349a79_vs_LTX0019_BS_GL--0b960ad5c7/LTX0019_SU_T1-R3--4ef0349a79.gripss.filtered.somatic.vcf.gz"
+#gripps_vcf <- "/Volumes/proj-tracerx-wgs/working/release/TRACERxWGS_20231218/LTX0019/GRIPPS/LTX0019_SU_T1-R3--4ef0349a79_vs_LTX0019_BS_GL--0b960ad5c7/LTX0019_SU_T1-R3--4ef0349a79.gripss.filtered.somatic.vcf.gz"
 
 ################################################################################
 ###################################################################### function
