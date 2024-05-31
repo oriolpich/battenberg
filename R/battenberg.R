@@ -84,8 +84,7 @@ battenberg = function(analysis="paired", tumourname, normalname, tumour_data_fil
                       norm.geno.clust.exe="normalize_affy_geno_cluster.pl", birdseed_report_file="birdseed.report.txt", heterozygousFilter="none",
                       prior_breakpoints_file=NULL, GENOMEBUILD="hg19", chrom_coord_file=NULL,
                       purple_path=NULL,
-                      WES_solutions=NULL,
-                      SV_vcf=NULL) {
+                      WES_solutions=NULL) {
   
   requireNamespace("foreach")
   requireNamespace("doParallel")
@@ -337,9 +336,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
     print('SEGMENTING BAF HERE')
 
     # Segment the phased and haplotyped BAF data
-    
-    # KT: include SV breakpoints file per tumour region
-    read.filter.gripps(GRIPPS_SV_path = SV_vcf[sampleidx], col_name = "mid", prior_breakpoints_fil[sampleidx])
+  
     
     segment.baf.phased(samplename=tumourname[sampleidx],
                        inputfile=paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep=""), 
