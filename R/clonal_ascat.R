@@ -1305,6 +1305,23 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, chromosomes, dist_choi
   #DCW 180711 - try weighting BAF=0.5 equally with other points
   TheoretMaxdist = sum(rep(0.25,dim(s)[1]) * s[,"length"],na.rm=T)
 
+  # GET ALTERNATIVE SOLUTIONS FROM D
+  # modified by Oriol
+  alt.sol = data.frame()
+  inv.d <- 1/d
+  alt.ploidy <- cbind(as.numeric(rownames(inv.d)),apply(inv.d,1,max))
+  alt.cellularity <- cbind(as.numeric(colnames(inv.d)),apply(inv.d,2,max))
+  alt.p.indx <- which(diff(sign(diff(alt.ploidy[,2]))) == -2) + 1
+  alt.c.indx <- apply(inv.d[rownames(alt.ploidy[alt.p.indx,,drop=F]),,drop=F],1,function(x){ which(x == max(x))})
+  
+  alt.sol <- cbind(alt.ploidy[alt.p.indx,1,drop=F], alt.cellularity[alt.c.indx,,drop=F])
+  colnames(alt.sol) <- c('psi_ploidy', 'rho_aberrant_cell_fraction', 'goodness_of_fit')
+  alt.sol <- alt.sol[order(alt.sol[,3],decreasing=T),,drop=F]
+  rownames(alt.sol) <- 1:nrow(alt.sol)
+  alt.sol[,3] <- (1-((1/alt.sol[,3])/TheoretMaxdist)) * 100
+
+  print(alt.sol)
+
   if( !(minimise) ) # kjd 10-3-2014
   {
 	d = - d # This ensures that we "maximise" instead of "minimise"!	
@@ -1438,7 +1455,7 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, chromosomes, dist_choi
   }
   ASCAT::ascat.plotSunrise(-d, psi_opt1_plot, rho_opt1_plot,minimise)
   if (!is.na(distancepng)) { dev.off() }
-}
+  }
 
   if(nropt>0) {
 
@@ -1477,7 +1494,8 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, chromosomes, dist_choi
 	if (!is.na(nonroundedprofilepng)) { dev.off() }
   
   }
-  output_optimum_pair = list(psi = psi, rho = rho, ploidy = ploidy)
+  output_optimum_pair = list(psi = psi, rho = rho, ploidy = ploidy,  alternative_solutions = alt.sol)
+  saveRDS(output_optimum_pair, '/nemo/project/proj-tracerx-wgs/working/picho/test_multiplesols.RDS')
   return( output_optimum_pair ) # kjd 20-2-2014 
 }
 
