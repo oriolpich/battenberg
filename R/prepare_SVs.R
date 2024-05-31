@@ -1,24 +1,15 @@
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-# # #             prepare SVs for battenberg txWGS pipeline               # # #  
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-# author: Kerstin Thol
-################################################################################
-###################################################################### libraries
-library(VariantAnnotation)
-library(StructuralVariantAnnotation)
-library(dplyr)
-
-################################################################################
-##################################################################test file paths
-#gripps_vcf <- "/Volumes/proj-tracerx-wgs/working/release/TRACERxWGS_20231218/LTX0019/GRIPPS/LTX0019_SU_T1-R3--4ef0349a79_vs_LTX0019_BS_GL--0b960ad5c7/LTX0019_SU_T1-R3--4ef0349a79.gripss.filtered.somatic.vcf.gz"
-
-################################################################################
-###################################################################### function
-
-# (KT) NOTE: I would not necessarily trust var_count and coverage because it's not clear if this is the correct collumns
+#' function that reads in SVs from VCFs for use in battenberg
+#' (KT) NOTE: I would not necessarily trust var_count and coverage because it's not clear if this is the correct collumns
+#' @param GRIPPS_SV_path vector including the paths to region specific GRIPPS output vcf
+#' @param col_name wheter the midpoint of a beakpoint is used when the breakpoint (not SV) is not just one bp, only takes "mid" as input right now
+#' @author KT
+#' @export read.filter.gripps
 read.filter.gripps <- function(GRIPPS_SV_path, col_name = "mid"){
   
+  suppressPackageStartupMessages(require(VariantAnnotation))
+  suppressPackageStartupMessages(require(StructuralVariantAnnotation))
+  suppressPackageStartupMessages(require(dplyr))
+
   all_out_path <- list()
   for(i in 1:length(GRIPPS_SV_path)){
 
