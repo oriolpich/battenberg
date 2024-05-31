@@ -282,7 +282,7 @@ get_multisample_phasing2 <- function(chrom, bbphasingprefixes, maxlag = 100, rel
 #' @param plotting Should the multisample phasing plots be made? (Default: TRUE)
 #' @author jdemeul
 #' @export
-call_multisample_MSAI <- function(rdsprefix, subclonesfiles, chrom_names, tumournames, plotting = T) {
+call_multisample_MSAI <- function(rdsprefix, subclonesfiles, chrom_names, tumournames, plotting = T, RHO, PSI) {
 
   # compile all CN results
   subclonescat <- lapply(X = subclonesfiles, FUN = function(x) read.delim(file = x, as.is = T))
@@ -354,14 +354,14 @@ call_multisample_MSAI <- function(rdsprefix, subclonesfiles, chrom_names, tumour
         p1 <- p1 + ggplot2::geom_point(data = df1, mapping = ggplot2::aes(x = pos, y = BAF), alpha = .6, colour = "#ef8a62", shape = 46, show.legend = F) + ggplot2::theme_minimal()
         p1 <- p1 + ggplot2::labs(x = "Position", y = "BAF", title = paste0(tumour, ": multisample phasing chr", chrom))
         
-        ggplot2::ggsave(filename = paste0(tumour, "_multisample_phasing_chr", chrom, ".png"), plot = p1, width = 20, height = 5)
+        ggplot2::ggsave(filename = paste0(tumour, "_psi", PSI, "_rho", RHO ,"_multisample_phasing_chr", chrom, ".png"), plot = p1, width = 20, height = 5)
       }
     }
   }
 
   # write out final MSAI dataframe
   msaiout <- GenomicRanges::as.data.frame(unlist(imbalancedregions_disj, use.names = F))
-  write.table(x = msaiout[, -c(4:6)], file = paste0("multisample_MSAI.txt"), row.names = F, sep = "\t", quote = F)
+  write.table(x = msaiout[, -c(4:6)], file = paste0("psi", PSI, "_rho", RHO, "_multisample_MSAI.txt"), row.names = F, sep = "\t", quote = F)
   return(NULL)
 }
 

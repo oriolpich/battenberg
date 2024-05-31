@@ -1,4 +1,9 @@
 
+# function to run the Battenberg pipeline
+# heavily modified by Oriol Pich and Kerstin Thol to run on txWGs data
+# and to run for multiple solutions, including multiple solutions from PURPLE and
+# manually QC'd TRAXERx421 WES solutions
+
 #' Run the Battenberg pipeline
 #'
 #' @param analysis The mode of Battenberg copy number analysis to be undertaken: 'paired' for tumour-normal pair, 'cell_line' for Cell line tumour-only and 'germline' for germline CNV of normal sample (Default: 'paired')
@@ -77,7 +82,10 @@ battenberg = function(analysis="paired", tumourname, normalname, tumour_data_fil
                       write_battenberg_phasing_v = T, multisample_relative_weight_balanced = 0.25, multisample_maxlag = 100, segmentation_gamma_multisample = 5,
                       snp6_reference_info_file=NA, apt.probeset.genotype.exe="apt-probeset-genotype", apt.probeset.summarize.exe="apt-probeset-summarize",
                       norm.geno.clust.exe="normalize_affy_geno_cluster.pl", birdseed_report_file="birdseed.report.txt", heterozygousFilter="none",
-                      prior_breakpoints_file=NULL, GENOMEBUILD="hg19", chrom_coord_file=NULL) {
+                      prior_breakpoints_file=NULL, GENOMEBUILD="hg19", chrom_coord_file=NULL,
+                      purple_path=NULL,
+                      WES_solutions=NULL,
+                      SV_vcf=NULL) {
   
   requireNamespace("foreach")
   requireNamespace("doParallel")
@@ -329,10 +337,14 @@ prepare_wgs_germline(chrom_names=chrom_names,
     print('SEGMENTING BAF HERE')
 
     # Segment the phased and haplotyped BAF data
+    
+    # KT: include SV breakpoints file per tumour region
+    read.filter.gripps(GRIPPS_SV_path = SV_vcf[sampleidx], col_name = "mid", prior_breakpoints_fil[sampleidx])
+    
     segment.baf.phased(samplename=tumourname[sampleidx],
                        inputfile=paste(tumourname[sampleidx], "_heterozygousMutBAFs_haplotyped.txt", sep=""), 
                        outputfile=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
-                       prior_breakpoints_file=prior_breakpoints_file,
+                       prior_breakpoints_file=prior_breakpoints_file[sampleidx],
                        gamma=segmentation_gamma,
                        phasegamma=phasing_gamma,
                        kmin=segmentation_kmin,
@@ -444,10 +456,11 @@ prepare_wgs_germline(chrom_names=chrom_names,
     
     print('SEGMENTING HEREE')
     # Segment the phased and haplotyped BAF data
+    # KT: change it so prior_breakpoints_file is always NULL because we dont want to segment again
     segment.baf.phased.multisample(samplename=tumourname,
                                    inputfile=paste(tumourname, "_heterozygousMutBAFs_haplotyped.txt", sep=""), 
                                    outputfile=paste(tumourname, ".BAFsegmented.txt", sep=""),
-                                   prior_breakpoints_file=prior_breakpoints_file,
+                                   prior_breakpoints_file=NULL,
                                    gamma=segmentation_gamma_multisample,
                                    calc_seg_baf_option=calc_seg_baf_option,
                                    GENOMEBUILD=GENOMEBUILD)
@@ -474,6 +487,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
     }
     
     # Fit a clonal copy number profile
+    # KT: added purple purity path option and TRACERx421 WES purity and ploidy 
     fit.copy.number(samplename=tumourname[sampleidx],
                     outputfile.prefix=paste(tumourname[sampleidx], "_", sep=""),
                     inputfile.baf.segmented=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
@@ -491,63 +505,91 @@ prepare_wgs_germline(chrom_names=chrom_names,
                     preset_rho=NA,
                     preset_psi=NA,
                     read_depth=30,
-                    analysis=analysis)
+                    analysis=analysis,
+                    PURPLE_purity_path=purple_path[sampleidx],
+                    Tx421_WES_purity_path = WES_solutions)
     
-    # Go over all segments, determine which segements are a mixture of two states and fit a second CN state
-    callSubclones(sample.name=tumourname[sampleidx],
-                  baf.segmented.file=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
-                  logr.file=logr_file,
-                  rho.psi.file=paste(tumourname[sampleidx], "_rho_and_psi.txt",sep=""),
-                  output.file=paste(tumourname[sampleidx],"_subclones.txt", sep=""),
-                  output.figures.prefix=paste(tumourname[sampleidx],"_subclones_chr", sep=""),
-                  output.gw.figures.prefix=paste(tumourname[sampleidx],"_BattenbergProfile", sep=""),
-                  masking_output_file=paste(tumourname[sampleidx], "_segment_masking_details.txt", sep=""),
-                  prior_breakpoints_file=prior_breakpoints_file,
-                  chr_names=chrom_names, 
-                  gamma=platform_gamma, 
-                  segmentation.gamma=NA, 
-                  siglevel=0.05, 
-                  maxdist=0.01, 
-                  noperms=1000,
-                  calc_seg_baf_option=calc_seg_baf_option)
+    # KT: need to iterate over callSubclones for each soltion that we find in fit.copy.numberd
+    # first read in file with all soltions
+    all_solutions <- read.table(paste0("all_solutions_rho_psi.txt"), head = T, sep = "\t")
     
-    # If patient is male, get copy number status of ChrX based only on logR segmentation (due to hemizygosity of SNPs)
-    # Only do this when X chromosome is included
-    if (ismale & "X" %in% chrom_names){
-      callChrXsubclones(TUMOURNAME=tumourname[sampleidx],
-                        X_GAMMA=1000,
-                        X_KMIN=100,
-                        GENOMEBUILD=GENOMEBUILD,
-                        AR=TRUE)
+    for(solution in 1:max(all_solutions$solution)){
+      
+      print(paste0("calling subclonal copy number for solution ", solution, " of ", max(all_solutions$solution)))
+      
+      rho <- all_solutions[all_solutions$solution == solution, "rho"]
+      psi <- all_solutions[all_solutions$solution == solution, "psi"]
+      
+      rho.psi.file.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_rho_and_psi.txt")
+      output.file.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_subclones.txt")
+      output.figures.prefix.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_subclones_chr")
+      output.gw.figures.prefix.solution  <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_BattenbergProfile")
+      masking_output_file <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_segment_masking_details.txt")
+      
+      # Go over all segments, determine which segements are a mixture of two states and fit a second CN state
+      callSubclones(sample.name=tumourname[sampleidx],
+                    baf.segmented.file=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
+                    logr.file=logr_file,
+                    rho.psi.file=rho.psi.file.solution,
+                    output.file=output.file.solution,
+                    output.figures.prefix=output.figures.prefix.solution,
+                    output.gw.figures.prefix=paste(tumourname[sampleidx],"_BattenbergProfile", sep=""),
+                    masking_output_file=paste(tumourname[sampleidx], "_segment_masking_details.txt", sep=""),
+                    prior_breakpoints_file=prior_breakpoints_file[sampleidx],
+                    chr_names=chrom_names, 
+                    gamma=platform_gamma, 
+                    segmentation.gamma=NA, 
+                    siglevel=0.05, 
+                    maxdist=0.01, 
+                    noperms=1000,
+                    calc_seg_baf_option=calc_seg_baf_option)
+      
+      # If patient is male, get copy number status of ChrX based only on logR segmentation (due to hemizygosity of SNPs)
+      # Only do this when X chromosome is included
+      if (ismale & "X" %in% chrom_names){
+        callChrXsubclones(TUMOURNAME=tumourname[sampleidx],
+                          X_GAMMA=1000,
+                          X_KMIN=100,
+                          GENOMEBUILD=GENOMEBUILD,
+                          AR=TRUE,
+                          RHO = rho,
+                          PSI = psi)
+      }
+      
+      # Make some post-hoc plots
+      make_posthoc_plots(samplename=tumourname[sampleidx],
+                         logr_file=logr_file,
+                         subclones_file=paste("psi", psi, "_rho", rho, "_subclones.txt", sep=""),
+                         rho_psi_file=paste("psi", psi, "_rho", rho, "_rho_and_psi.txt", sep=""),
+                         bafsegmented_file=paste("psi", psi, "_rho", rho, ".BAFsegmented.txt", sep=""),
+                         logrsegmented_file=paste("psi", psi, "_rho", rho, ".logRsegmented.txt", sep=""),
+                         allelecounts_file=allelecounts_file,
+                         RHO = rho,
+                         PSI = psi)
+      
+      # Save refit suggestions for a future rerun
+      cnfit_to_refit_suggestions(samplename=tumourname[sampleidx],
+                                 subclones_file=paste(tumourname[sampleidx], "_subclones.txt", sep=""),
+                                 rho_psi_file=paste(tumourname[sampleidx], "_rho_and_psi.txt", sep=""),
+                                 gamma_param=platform_gamma,
+                                 RHO = rho,
+                                 PSI = psi)
+      
     }
     
-    # Make some post-hoc plots
-    make_posthoc_plots(samplename=tumourname[sampleidx],
-                       logr_file=logr_file,
-                       subclones_file=paste(tumourname[sampleidx], "_subclones.txt", sep=""),
-                       rho_psi_file=paste(tumourname[sampleidx], "_rho_and_psi.txt", sep=""),
-                       bafsegmented_file=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
-                       logrsegmented_file=paste(tumourname[sampleidx], ".logRsegmented.txt", sep=""),
-                       allelecounts_file=allelecounts_file)
+    # Kill the threads as last part again is single core
+    parallel::stopCluster(clp)
     
-    # Save refit suggestions for a future rerun
-    cnfit_to_refit_suggestions(samplename=tumourname[sampleidx],
-                               subclones_file=paste(tumourname[sampleidx], "_subclones.txt", sep=""),
-                               rho_psi_file=paste(tumourname[sampleidx], "_rho_and_psi.txt", sep=""),
-                               gamma_param=platform_gamma)
-    
-  }
-  
-  # Kill the threads as last part again is single core
-  parallel::stopCluster(clp)
- 
-  if (nsamples > 1) {
-    print("Assessing mirrored subclonal allelic imbalance (MSAI)")
-    call_multisample_MSAI(rdsprefix = multisamplehaplotypeprefix,
-                          subclonesfiles = paste0(tumourname, "_subclones.txt"),
-                          chrom_names = chrom_names,
-                          tumournames = tumourname,
-                          plotting = T)
+    if (nsamples > 1) {
+      print("Assessing mirrored subclonal allelic imbalance (MSAI)")
+      call_multisample_MSAI(rdsprefix = multisamplehaplotypeprefix,
+                            subclonesfiles = paste0(tumourname, "_subclones.txt"),
+                            chrom_names = chrom_names,
+                            tumournames = tumourname,
+                            plotting = T,
+                            RHO = rho,
+                            PSI = psi)
+    }
   }
 }
 

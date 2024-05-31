@@ -1495,7 +1495,7 @@ runASCAT = function(lrr, baf, lrrsegmented, bafsegmented, chromosomes, dist_choi
   
   }
   output_optimum_pair = list(psi = psi, rho = rho, ploidy = ploidy,  alternative_solutions = alt.sol)
-  saveRDS(output_optimum_pair, '/nemo/project/proj-tracerx-wgs/working/picho/test_multiplesols.RDS')
+  # saveRDS(output_optimum_pair, '/nemo/project/proj-tracerx-wgs/working/picho/test_multiplesols.RDS')
   return( output_optimum_pair ) # kjd 20-2-2014 
 }
 

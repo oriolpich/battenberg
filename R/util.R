@@ -267,6 +267,8 @@ suggest_refit = function(subclones_file, segment_chrom, segment_pos, new_nMaj, n
 #' This function takes a fit copy number profile and generates refit suggestions for a future rerun.
 #' If there are clonal alterations above a specified size, then those written out as supplied as suggestions,
 #' otherwise a refit suggestion of an external purity value will be saved.
+#' 
+#' KT:added rho and psi label name
 #' @param samplename Samplename for the output file
 #' @param subclones_file File containing a fit copy number profile
 #' @param rho_psi_file File with rho and psi values
@@ -274,7 +276,7 @@ suggest_refit = function(subclones_file, segment_chrom, segment_pos, new_nMaj, n
 #' @param min_segment_size_mb Minimum size of a segment in Mb to be considered for a refit suggestion (Default: 2)
 #' @author sd11
 #' @export
-cnfit_to_refit_suggestions = function(samplename, subclones_file, rho_psi_file, gamma_param, min_segment_size_mb=2) {
+cnfit_to_refit_suggestions = function(samplename, subclones_file, rho_psi_file, gamma_param, min_segment_size_mb=2, RHO, PSI) {
   # samplename = "NASCR-0016"
   # subclones_file = "NASCR-0016_subclones.txt"
   subclones = Battenberg::read_table_generic(subclones_file)
@@ -329,7 +331,7 @@ cnfit_to_refit_suggestions = function(samplename, subclones_file, rho_psi_file, 
     # No large clonal alteration, save a suggestion that should use an external purity value
     output = data.frame(project=NA, samplename=samplename, qc=NA, cellularity_refit=T, chrom=NA, pos=NA, maj=NA, min=NA, baf=NA, logr=NA, rho_estimate=NA, psi_t_estimate=NA, rho_diff=NA, psi_t_diff=NA)
   }
-  write.table(output, file=paste0(samplename, "_refit_suggestion.txt"), quote=F, sep="\t", row.names=F)
+  write.table(output, file=paste0("psi", psi, "_rho", rho, "_refit_suggestion.txt"), quote=F, sep="\t", row.names=F)
 }
 
 ########################################################################################
