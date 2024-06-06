@@ -9,7 +9,9 @@ callChrXsubclones(
   X_GAMMA = 1000,
   X_KMIN = 100,
   GENOMEBUILD,
-  AR = TRUE
+  AR = TRUE,
+  RHO,
+  PSI
 )
 }
 \arguments{

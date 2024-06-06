@@ -190,14 +190,18 @@ fit.copy.number = function(samplename, outputfile.prefix, inputfile.baf.segmente
   if(!is.null(Tx421_WES_purity_path)){
   wes_solution <- read.table(Tx421_WES_purity_path, head = T, sep = "\t")
   wes_solution <- wes_solution[wes_solution$region == samplename, ]
-  wes_solution <- wes_solution[, c("Ploidy", "ACF")]
-  colnames(wes_solution) <- c("psi", "rho")
-  wes_solution$solution_type <- "WESmanualQC"
+
+    if(nrow(wes_solution) > 0){
+      wes_solution <- wes_solution[, c("Ploidy", "ACF")]
+      colnames(wes_solution) <- c("psi", "rho")
+      wes_solution$solution_type <- "WESmanualQC"
+    }
+  }
   
     if(is.null(PURPLE_purity_path)){
       purple_solution <- wes_solution
     }
-  }
+  
   
   if(all(!is.null(PURPLE_purity_path), !is.null(Tx421_WES_purity_path))){
     purple_solution <- rbind(purple_solution, wes_solution)
@@ -1031,14 +1035,14 @@ make_posthoc_plots = function(samplename, logr_file, subclones_file, rho_psi_fil
 #' @param GENOMEBUILD The genome build used in running Battenberg (hg19 or hg38)
 #' @author Naser Ansari-Pour (BDI, Oxford)
 #' @export
-callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=TRUE, RHO, PSI){
+callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=TRUE, RHO, PSI, solution_type){
   print(TUMOURNAME)
   PCFinput=data.frame(read_table_generic(paste0(TUMOURNAME,"_mutantLogR_gcCorrected.tab")),stringsAsFactors=F)
   PCFinput=PCFinput[which(PCFinput$Chromosome=="X" & PCFinput$Position>2.6e6 & PCFinput$Position<156e6),] # get nonPAR
   colnames(PCFinput)[3]=TUMOURNAME
   print(paste("Number of chrX nonPAR SNPs =",nrow(PCFinput)))
   PCF=copynumber::pcf(PCFinput,gamma=X_GAMMA,kmin=X_KMIN)
-  write.table(PCF, paste0("psi", PSI, "_rho", RHO, "_PCF_gamma_",X_GAMMA,"_chrX.txt"),col.names=T,row.names=F,quote=F,sep="\t")
+  write.table(PCF, paste0(solution_type, "_psi", PSI, "_rho", RHO, "_PCF_gamma_",X_GAMMA,"_chrX.txt"),col.names=T,row.names=F,quote=F,sep="\t")
   print("PCF segmentation done")
   
   if (GENOMEBUILD=="hg19"){
@@ -1051,15 +1055,14 @@ callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=T
   
   # INPUT for copy number inference
   SAMPLEsegs=data.frame(PCF,stringsAsFactors=F)
-  pupl=read.table(paste0(TUMOURNAME,"_purity_ploidy.txt"),header=T,stringsAsFactors=F)
+  pupl=read.table(paste0(TUMOURNAME, "_", solution_type, "_psi", PSI, "_rho", RHO, "_purity_ploidy.txt"),header=T,stringsAsFactors=F)
   SAMPLEpurity=pupl$purity
   #SAMPLEploidy=round(pupl$ploidy/2)*2
   SAMPLEn=pupl$ploidy
   print(paste(SAMPLEpurity,SAMPLEn))
   
   # Estimating LogR deviation in diploid and gained regions (AUTOSOMAL)
-  # KT: removed TUMOURNAME prefix
-  BB=read.table(paste0("psi", PSI, "_rho", RHO, "_subclones.txt"),header=T,stringsAsFactors = F)
+  BB=read.table(paste0(TUMOURNAME, "_", solution_type, "_psi", PSI, "_rho", RHO, "_subclones.txt"),header=T,stringsAsFactors = F)
   
   BBdip=BB[which(BB$nMaj1_A==1 & BB$nMin1_A==1 & BB$frac1_A==1),]
   # correction for LogR values
@@ -1300,7 +1303,7 @@ callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=T
   outputDF$rank=NULL
   
   print(paste("Number of rows merged =",nrow(SUBCLONESout)-nrow(outputDF)))
-  write.table(outputDF,paste0("psi", PSI, "_rho", RHO, "_chrX_subclones.txt"),col.names = T,row.names = F,quote = F,sep="\t")
+  write.table(outputDF,paste0(TUMOURNAME, "_", solution_type, "_psi", PSI, "_rho", RHO, "_chrX_subclones.txt"),col.names = T,row.names = F,quote = F,sep="\t")
   
   # PLOT
   outputDF$diff=outputDF$endpos-outputDF$startpos
@@ -1327,7 +1330,7 @@ callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=T
     plot_BB=plot_BB+geom_rect(data=segAR,aes(xmin=startpos,xmax=endpos,ymin=subclonalCN-0.02,ymax=subclonalCN+0.02),fill="red")
   }
   
-  pdf(paste0("psi", PSI, "_rho", RHO, "_chrX_average_ploidy.pdf"))
+  pdf(paste0(TUMOURNAME, "_", solution_type, "_psi", PSI, "_rho", RHO, "_chrX_average_ploidy.pdf"))
   print(plot_BB)
   dev.off()
   

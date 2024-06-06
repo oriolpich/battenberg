@@ -11,7 +11,7 @@ segment.baf.phased.multisample(
   prior_breakpoints_file = NULL,
   gamma = 10,
   calc_seg_baf_option = 3,
-  GENOMEBUILD
+  GENOMEBUILD = "hg38"
 )
 }
 \arguments{

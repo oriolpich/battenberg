@@ -50,7 +50,7 @@ battenberg(
   beaglewindow = 40,
   beagleoverlap = 4,
   javajre = "java",
-  write_battenberg_phasing = T,
+  write_battenberg_phasing_v = T,
   multisample_relative_weight_balanced = 0.25,
   multisample_maxlag = 100,
   segmentation_gamma_multisample = 5,
@@ -61,10 +61,15 @@ battenberg(
   birdseed_report_file = "birdseed.report.txt",
   heterozygousFilter = "none",
   prior_breakpoints_file = NULL,
-  GENOMEBUILD = "hg19"
+  GENOMEBUILD = "hg19",
+  chrom_coord_file = NULL,
+  purple_path = NULL,
+  WES_solutions = NULL
 )
 }
 \arguments{
+\item{analysis}{The mode of Battenberg copy number analysis to be undertaken: 'paired' for tumour-normal pair, 'cell_line' for Cell line tumour-only and 'germline' for germline CNV of normal sample (Default: 'paired')}
+
 \item{tumourname}{Tumour identifier, this is used as a prefix for the output files. If allele counts are supplied separately, they are expected to have this identifier as prefix.}
 
 \item{normalname}{Matched normal identifier, this is used as a prefix for the output files. If allele counts are supplied separately, they are expected to have this identifier as prefix.}
@@ -125,7 +130,7 @@ battenberg(
 
 \item{min_map_qual}{Minimum mapping quality required for a read to be counted when allele counting (Default: 35)}
 
-\item{calc_seg_baf_option}{Sets way to calculate BAF per segment: 1=mean, 2=median, 3=ifelse median==0 | 1, mean, median (Default: 3)}
+\item{calc_seg_baf_option}{Sets way to calculate BAF per segment: 1=mean, 2=median, 3=ifelse median==0 | 1, mean, median (Default (paired): 3, cell_line & germline: 1)}
 
 \item{skip_allele_counting}{Provide TRUE when allele counting can be skipped (i.e. its already done) (Default: FALSE)}
 
@@ -153,8 +158,6 @@ battenberg(
 
 \item{javajre}{Path to the Java JRE executable, only required for haplotype reconstruction with Beagle (default java, i.e. in $PATH)}
 
-\item{write_battenberg_phasing}{Write the Battenberg phasing results as vcf to disk, e.g. for multisample cases (Default: TRUE)}
-
 \item{multisample_relative_weight_balanced}{Relative weight to give to haplotype info from a sample without allelic imbalance in the region (Default: 0.25)}
 
 \item{multisample_maxlag}{Maximal number of upstream SNPs used in the multisample haplotyping to inform the haplotype at another SNP (Default: 100)}
@@ -176,6 +179,8 @@ battenberg(
 \item{prior_breakpoints_file}{A two column file with prior breakpoints to be used during segmentation (Default: NULL)}
 
 \item{GENOMEBUILD}{Genome build upon which the 1000G SNP coordinates were obtained (Default: hg19; options: "hg19" or "hg38")}
+
+\item{write_battenberg_phasing}{Write the Battenberg phasing results as vcf to disk, e.g. for multisample cases (Default: TRUE)}
 }
 \description{
 Run the Battenberg pipeline

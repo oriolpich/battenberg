@@ -9,7 +9,9 @@ call_multisample_MSAI(
   subclonesfiles,
   chrom_names,
   tumournames,
-  plotting = T
+  plotting = T,
+  RHO,
+  PSI
 )
 }
 \arguments{

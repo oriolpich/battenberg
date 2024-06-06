@@ -11,7 +11,9 @@ make_posthoc_plots(
   rho_psi_file,
   bafsegmented_file,
   logrsegmented_file,
-  allelecounts_file = NULL
+  allelecounts_file = NULL,
+  RHO,
+  PSI
 )
 }
 \arguments{

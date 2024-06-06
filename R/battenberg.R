@@ -508,7 +508,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
     
     # KT: need to iterate over callSubclones for each soltion that we find in fit.copy.numberd
     # first read in file with all soltions
-    all_solutions <- read.table(paste0("all_solutions_rho_psi.txt"), head = T, sep = "\t")
+    all_solutions <- read.table(paste0(tumourname[sampleidx], "_all_solutions_rho_psi.txt"), head = T, sep = "\t")
     
     for(solution in 1:max(all_solutions$solution)){
       
@@ -516,12 +516,13 @@ prepare_wgs_germline(chrom_names=chrom_names,
       
       rho <- all_solutions[all_solutions$solution == solution, "rho"]
       psi <- all_solutions[all_solutions$solution == solution, "psi"]
+      solution_type <- all_solutions[all_solutions$solution == solution, "solution_type"]
       
-      rho.psi.file.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_rho_and_psi.txt")
-      output.file.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_subclones.txt")
-      output.figures.prefix.solution <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_subclones_chr")
-      output.gw.figures.prefix.solution  <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_BattenbergProfile")
-      masking_output_file <- paste0(tumourname[sampleidx], "_psi", psi, "_rho", rho, "_segment_masking_details.txt")
+      rho.psi.file.solution <- paste0(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_runclonalASCAT_rho_and_psi.txt")
+      output.file.solution <- paste0(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_subclones.txt")
+      output.figures.prefix.solution <- paste0(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_subclones_chr")
+      output.gw.figures.prefix.solution  <- paste0(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_BattenbergProfile")
+      masking_output_file <- paste0(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_segment_masking_details.txt")
       
       # Go over all segments, determine which segements are a mixture of two states and fit a second CN state
       callSubclones(sample.name=tumourname[sampleidx],
@@ -550,42 +551,44 @@ prepare_wgs_germline(chrom_names=chrom_names,
                           GENOMEBUILD=GENOMEBUILD,
                           AR=TRUE,
                           RHO = rho,
-                          PSI = psi)
+                          PSI = psi,
+                          solution_type = solution_type)
       }
       
       # Make some post-hoc plots
       make_posthoc_plots(samplename=tumourname[sampleidx],
                          logr_file=logr_file,
-                         subclones_file=paste("psi", psi, "_rho", rho, "_subclones.txt", sep=""),
-                         rho_psi_file=paste("psi", psi, "_rho", rho, "_rho_and_psi.txt", sep=""),
-                         bafsegmented_file=paste("psi", psi, "_rho", rho, ".BAFsegmented.txt", sep=""),
-                         logrsegmented_file=paste("psi", psi, "_rho", rho, ".logRsegmented.txt", sep=""),
+                         subclones_file=paste(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_subclones.txt", sep=""),
+                         rho_psi_file=paste(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_runclonalASCAT_rho_and_psi.txt", sep=""),
+                         bafsegmented_file=paste(tumourname[sampleidx], ".BAFsegmented.txt", sep=""),
+                         logrsegmented_file=paste(tumourname[sampleidx], ".logRsegmented.txt", sep=""),
                          allelecounts_file=allelecounts_file,
                          RHO = rho,
                          PSI = psi)
       
       # Save refit suggestions for a future rerun
       cnfit_to_refit_suggestions(samplename=tumourname[sampleidx],
-                                 subclones_file=paste(tumourname[sampleidx], "_subclones.txt", sep=""),
-                                 rho_psi_file=paste(tumourname[sampleidx], "_rho_and_psi.txt", sep=""),
+                                 subclones_file=paste(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_subclones.txt", sep=""),
+                                 rho_psi_file=paste(tumourname[sampleidx], "_", solution_type, "_psi", psi, "_rho", rho, "_runclonalASCAT_rho_and_psi.txt", sep=""),
                                  gamma_param=platform_gamma,
                                  RHO = rho,
-                                 PSI = psi)
+                                 PSI = psi,
+                                 solution_type = solution_type)
+
+
+      # Kill the threads as last part again is single core
+      parallel::stopCluster(clp)
       
-    }
-    
-    # Kill the threads as last part again is single core
-    parallel::stopCluster(clp)
-    
-    if (nsamples > 1) {
-      print("Assessing mirrored subclonal allelic imbalance (MSAI)")
-      call_multisample_MSAI(rdsprefix = multisamplehaplotypeprefix,
-                            subclonesfiles = paste0(tumourname, "_subclones.txt"),
-                            chrom_names = chrom_names,
-                            tumournames = tumourname,
-                            plotting = T,
-                            RHO = rho,
-                            PSI = psi)
+      # if (nsamples > 1) {
+      #   print("Assessing mirrored subclonal allelic imbalance (MSAI)")
+      #   call_multisample_MSAI(rdsprefix = multisamplehaplotypeprefix,
+      #                         subclonesfiles = paste(tumourname, "_", solution_type, "_psi", psi, "_rho", rho, "_subclones.txt", sep=""),
+      #                         chrom_names = chrom_names,
+      #                         tumournames = tumourname,
+      #                         plotting = T,
+      #                         RHO = rho,
+      #                         PSI = psi)
+      # }                           
     }
   }
 }

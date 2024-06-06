@@ -9,7 +9,9 @@ cnfit_to_refit_suggestions(
   subclones_file,
   rho_psi_file,
   gamma_param,
-  min_segment_size_mb = 2
+  min_segment_size_mb = 2,
+  RHO,
+  PSI
 )
 }
 \arguments{
@@ -27,6 +29,9 @@ cnfit_to_refit_suggestions(
 This function takes a fit copy number profile and generates refit suggestions for a future rerun.
 If there are clonal alterations above a specified size, then those written out as supplied as suggestions,
 otherwise a refit suggestion of an external purity value will be saved.
+}
+\details{
+KT:added rho and psi label name
 }
 \author{
 sd11

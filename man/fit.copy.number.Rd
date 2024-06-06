@@ -23,7 +23,9 @@ fit.copy.number(
   preset_rho = NA,
   preset_psi = NA,
   read_depth = 30,
-  analysis = "paired"
+  analysis = "paired",
+  PURPLE_purity_path,
+  Tx421_WES_purity_path
 )
 }
 \arguments{
