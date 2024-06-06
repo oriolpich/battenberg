@@ -11,7 +11,8 @@ cnfit_to_refit_suggestions(
   gamma_param,
   min_segment_size_mb = 2,
   RHO,
-  PSI
+  PSI,
+  solution_type
 )
 }
 \arguments{

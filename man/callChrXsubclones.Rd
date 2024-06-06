@@ -11,7 +11,8 @@ callChrXsubclones(
   GENOMEBUILD,
   AR = TRUE,
   RHO,
-  PSI
+  PSI,
+  solution_type
 )
 }
 \arguments{
