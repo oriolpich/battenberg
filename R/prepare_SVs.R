@@ -10,10 +10,8 @@ read.filter.gripps <- function(GRIPPS_SV_path, col_name = "mid"){
   suppressPackageStartupMessages(require(StructuralVariantAnnotation))
   suppressPackageStartupMessages(require(dplyr))
 
-  all_out_path <- list()
+  all_df <- list()
   for(i in 1:length(GRIPPS_SV_path)){
-
-    prior_breakpoints_file <- sub(".vcf.gz", ".txt", GRIPPS_SV_path[[i]])
 
     sr_SV <- readVcf(GRIPPS_SV_path[[i]])
     gr <- breakpointRanges(sr_SV)
@@ -65,13 +63,21 @@ read.filter.gripps <- function(GRIPPS_SV_path, col_name = "mid"){
     
     colnames(bedpe) <- c("chromosome", "position")
     bedpe$chromosome <- sub("chr", "", bedpe$chromosome)
-    
-    write.table(bedpe, prior_breakpoints_file, col.names = T, row.names = F, quote = F, sep = "\t")
-    all_out_path[[i]] <-  prior_breakpoints_file
-  }
-  all_out_path_out <- c(unlist(all_out_path))
-  return(all_out_path_out)
-}
 
+    all_df[[i]] <- bedpe
+    
+  }
+
+  all_df <- do.call(rbind, all_df)
+  tumour <- strsplit(GRIPPS_SV_path, "/")[[1]][length(strsplit(GRIPPS_SV_path, "/")[[1]])]
+  tumour <- sub("_.*", "", tumour)
+
+  prior_breakpoints_file <- strsplit(GRIPPS_SV_path, "/")[[1]][1:(length(strsplit(GRIPPS_SV_path, "/")[[1]])-1)]
+  prior_breakpoints_file <- paste(c(prior_breakpoints_file), collapse = "/")
+  prior_breakpoints_file <- paste0(prior_breakpoints_file, "/", tumour, ".gripss.filtered.somatic.txt")
+
+  write.table(all_df, prior_breakpoints_file, col.names = T, row.names = F, quote = F, sep = "\t")
+  return(prior_breakpoints_file)
+}
 
 
