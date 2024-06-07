@@ -69,10 +69,12 @@ read.filter.gripps <- function(GRIPPS_SV_path, col_name = "mid"){
   }
 
   all_df <- do.call(rbind, all_df)
+  all_df <- unique(all_df)
+
   tumour <- strsplit(GRIPPS_SV_path, "/")[[1]][length(strsplit(GRIPPS_SV_path, "/")[[1]])]
   tumour <- sub("_.*", "", tumour)
 
-  prior_breakpoints_file <- strsplit(GRIPPS_SV_path, "/")[[1]][1:(length(strsplit(GRIPPS_SV_path, "/")[[1]])-1)]
+  prior_breakpoints_file <- strsplit(GRIPPS_SV_path[[1]], "/")[[1]][1:(length(strsplit(GRIPPS_SV_path[[1]], "/")[[1]])-1)]
   prior_breakpoints_file <- paste(c(prior_breakpoints_file), collapse = "/")
   prior_breakpoints_file <- paste0(prior_breakpoints_file, "/", tumour, ".gripss.filtered.somatic.txt")
 
