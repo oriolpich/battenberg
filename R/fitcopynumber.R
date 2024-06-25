@@ -1109,6 +1109,7 @@ callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=T
   # assign CN
   SEG=data.frame()
   for (j in 1:nrow(SAMPLEsegs)){
+
     seg=SAMPLEsegs[j,]
     seg$type=ifelse(seg$mean<0,"loss","gain")
     
@@ -1177,6 +1178,8 @@ callChrXsubclones = function(TUMOURNAME,X_GAMMA=1000,X_KMIN=100,GENOMEBUILD,AR=T
   # CALCULATE CCF 
   CCF=data.frame()
   for (j in 1:nrow(SEG)){
+
+    print(j)
     seg=SEG[j,]
     if (seg$CNA=="yes"){
       if (seg$type=="gain"){
