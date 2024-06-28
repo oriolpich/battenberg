@@ -464,15 +464,11 @@ prepare_wgs_germline(chrom_names=chrom_names,
     
   }
   
-  # KT: don't need this for forloop
   # Setup for parallel computing
-  # clp = parallel::makeCluster(min(nthreads, nsamples))
-  # doParallel::registerDoParallel(clp)
+  clp = parallel::makeCluster(min(nthreads, nsamples))
+  doParallel::registerDoParallel(clp)
   
-  # for (sampleidx in 1:nsamples) {
-  # foreach::foreach (sampleidx=1:nsamples) %dopar% {
-  # KT: change into for loop instead foreach
-  for(sampleidx in 1:nsamples){
+  foreach::foreach (sampleidx=1:nsamples) %dopar% {
     print(paste0("Fitting final copy number and calling subclones for sample ", tumourname[sampleidx]))
     
     if (data_type=="wgs" | data_type=="WGS") {
@@ -480,7 +476,7 @@ prepare_wgs_germline(chrom_names=chrom_names,
       if (analysis=="paired") {
         allelecounts_file = paste(tumourname[sampleidx], "_alleleCounts.tab", sep="")
       } else {
-	# Not produced by a number of analysis and is required for some plots. Setting to NULL  makes the pipeline not attempt to create these plots
+	    # Not produced by a number of analysis and is required for some plots. Setting to NULL  makes the pipeline not attempt to create these plots
         allelecounts_file = NULL
       }
     }
@@ -578,9 +574,8 @@ prepare_wgs_germline(chrom_names=chrom_names,
                                  solution_type = solution_type)
 
 
-      # KT: don't need this for forloop
       # Kill the threads as last part again is single core
-      # parallel::stopCluster(clp)
+      parallel::stopCluster(clp)
       
       # if (nsamples > 1) {
       #   print("Assessing mirrored subclonal allelic imbalance (MSAI)")
