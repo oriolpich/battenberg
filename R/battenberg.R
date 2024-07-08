@@ -464,11 +464,14 @@ prepare_wgs_germline(chrom_names=chrom_names,
     
   }
   
+  #KT: don't need this without forach 
   # Setup for parallel computing
-  clp = parallel::makeCluster(min(nthreads, nsamples))
-  doParallel::registerDoParallel(clp)
+  #clp = parallel::makeCluster(min(nthreads, nsamples))
+  #doParallel::registerDoParallel(clp)
   
-  foreach::foreach (sampleidx=1:nsamples) %dopar% {
+  #foreach::foreach (sampleidx=1:nsamples) %dopar% {
+  #KT make this into for loop instead of foreach
+  for(sampleidx in 1:nsamples){
     print(paste0("Fitting final copy number and calling subclones for sample ", tumourname[sampleidx]))
     
     if (data_type=="wgs" | data_type=="WGS") {
@@ -575,7 +578,8 @@ prepare_wgs_germline(chrom_names=chrom_names,
 
 
       # Kill the threads as last part again is single core
-      parallel::stopCluster(clp)
+      # KT: don't need this without the foreach
+      #parallel::stopCluster(clp)
       
       # if (nsamples > 1) {
       #   print("Assessing mirrored subclonal allelic imbalance (MSAI)")
