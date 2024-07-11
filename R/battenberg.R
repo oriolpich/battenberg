@@ -593,6 +593,19 @@ prepare_wgs_germline(chrom_names=chrom_names,
       # }                           
     }
   }
+
+  #KT: compress files 
+  # list all text files
+  all_text_files <- list.files(pattern = ".txt$")
+
+  for(i in 1:length(all_text_files)){
+
+    file_name <- all_text_files[i]
+    n <- sub("\\.txt", "", file_name)
+    nn <- paste0(n, ".txt.gz")
+
+    R.utils::gzip(file_name, nn)
+
+  }
+
 }
-
-
