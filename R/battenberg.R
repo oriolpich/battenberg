@@ -532,8 +532,8 @@ prepare_wgs_germline(chrom_names=chrom_names,
                     rho.psi.file=rho.psi.file.solution,
                     output.file=output.file.solution,
                     output.figures.prefix=output.figures.prefix.solution,
-                    output.gw.figures.prefix=paste(tumourname[sampleidx],"_BattenbergProfile", sep=""),
-                    masking_output_file=paste(tumourname[sampleidx], "_segment_masking_details.txt", sep=""),
+                    output.gw.figures.prefix=output.gw.figures.prefix.solution,
+                    masking_output_file=masking_output_file,
                     prior_breakpoints_file=prior_breakpoints_file,
                     chr_names=chrom_names, 
                     gamma=platform_gamma, 
@@ -565,7 +565,8 @@ prepare_wgs_germline(chrom_names=chrom_names,
                          logrsegmented_file=paste(tumourname[sampleidx], ".logRsegmented.txt", sep=""),
                          allelecounts_file=allelecounts_file,
                          RHO = rho,
-                         PSI = psi)
+                         PSI = psi,
+                         solution_type = solution_type)
       
       # Save refit suggestions for a future rerun
       cnfit_to_refit_suggestions(samplename=tumourname[sampleidx],
