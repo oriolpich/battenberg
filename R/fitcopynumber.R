@@ -1003,17 +1003,17 @@ make_posthoc_plots = function(samplename, logr_file, subclones_file, rho_psi_fil
   subclones = Battenberg::read_table_generic(subclones_file)
   rho_psi = read.table(rho_psi_file, header=T, stringsAsFactors=F)
   purity = rho_psi["FRAC_GENOME", "rho"]
-  totalcn_chrom_plot(samplename, subclones, logr, paste0(solution_type, "_psi", PSI, "_rho", RHO, "_totalcn_chrom_plot.png"), purity)
+  totalcn_chrom_plot(samplename, subclones, logr, paste0(samplename, "_", solution_type, "_psi", PSI, "_rho", RHO, "_totalcn_chrom_plot.png"), purity)
   
   bafsegmented = as.data.frame(Battenberg::read_table_generic(bafsegmented_file))
   logrsegmented = as.data.frame(Battenberg::read_table_generic(logrsegmented_file, header=F))
   colnames(logrsegmented) = c("Chromosome", "Position", "logRseg")
-  outputfile = paste0(solution_type, "_psi", PSI, "_rho", RHO, "_alleleratio.png")
+  outputfile = paste0(samplename, "_", solution_type, "_psi", PSI, "_rho", RHO, "_alleleratio.png")
   allele_ratio_plot(samplename=samplename, logr=logr, bafsegmented=bafsegmented, logrsegmented=logrsegmented, outputfile=outputfile, max.plot.cn=8)
   
   if (!is.null(allelecounts_file)) {
     allelecounts = as.data.frame(Battenberg::read_table_generic(allelecounts_file))
-    outputfile = paste0(solution_type, "_psi", PSI, "_rho", RHO, "_coverage.png")
+    outputfile = paste0(samplename, "_", solution_type, "_psi", PSI, "_rho", RHO, "_coverage.png")
     coverage_plot(samplename, allelecounts, outputfile)
   }
 }
