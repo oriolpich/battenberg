@@ -609,4 +609,30 @@ prepare_wgs_germline(chrom_names=chrom_names,
 
   }
 
+  #and change the tab files
+  all_tab_files <- list.files(pattern = ".tab$")
+
+  for(i in 1:length(all_tab_files)){
+
+    file_name <- all_tab_files[i]
+    n <- sub("\\.tab", "", file_name)
+    nn <- paste0(n, ".tab.gz")
+
+    R.utils::gzip(file_name, nn)
+
+  }
+
+  #and change the log files
+  all_log_files <- list.files(pattern = ".log$")
+
+  for(i in 1:length(all_log_files)){
+
+    file_name <- all_log_files[i]
+    n <- sub("\\.log", "", file_name)
+    nn <- paste0(n, ".log.gz")
+
+    R.utils::gzip(file_name, nn)
+
+  }
+
 }
